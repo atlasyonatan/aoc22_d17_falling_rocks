@@ -7,10 +7,10 @@ use std::{
 };
 
 fn main() {
-    let file_path = "../input.txt";
+    let file_path = "../test.txt";
     let width = 7;
     let spawn_height = 4;
-    let stop_after = 30;
+    let stop_after = 2022;
     let left_edge_offset = 2;
 
     let path = Path::new(file_path);
@@ -50,13 +50,7 @@ fn main() {
                 shape.coordinates.extend(row.map(|index| index as i32));
             }
 
-            let left_edge = shape
-                .coordinates
-                .iter()
-                .map(|coordinate| coordinate % offset)
-                .min()
-                .unwrap();
-            (shape, left_edge)
+            shape
         })
         .collect();
     println!("{:?}", rocks);
@@ -65,15 +59,20 @@ fn main() {
     let mut rock_formation = HashSet::new();
     let mut top_row = 0;
     let row_offset = width as i32;
+    let vertical_push = -7;
 
-    for (mut rock, left_edge) in rocks.iter().map(|shape| shape.clone()).cycle() {
+    for mut rock in rocks
+        .iter()
+        .map(|shape| shape.clone())
+        .cycle()
+        .take(stop_after)
+    {
         let spawn_row = top_row + spawn_height;
-        rock.step(spawn_row * row_offset + left_edge); // adjust start position of rock
+        rock.step(spawn_row * row_offset + left_edge_offset); // adjust start position of rock
         loop {
-            let mut clone = rock.clone();
             let side_push = match jets.next().unwrap() {
                 Direction::Left
-                    if clone
+                    if rock
                         .coordinates
                         .iter()
                         .all(|coordinate| coordinate % row_offset > 0) =>
@@ -81,7 +80,7 @@ fn main() {
                     -1
                 }
                 Direction::Right
-                    if clone
+                    if rock
                         .coordinates
                         .iter()
                         .all(|coordinate| coordinate % row_offset < row_offset - 1) =>
@@ -91,12 +90,14 @@ fn main() {
 
                 _ => 0,
             };
+            rock.step(side_push);
 
-            clone.step(side_push + row_offset); // get pushed and move down
+            let mut clone = rock.clone();
+            clone.step(vertical_push);
             if clone
                 .coordinates
                 .iter()
-                .any(|coordinate| *coordinate < 0 || rock_formation.contains(coordinate))
+                .any(|coordinate| rock_formation.contains(coordinate) || *coordinate%row_offset <= 0)
             {
                 //collision
                 top_row = top_row.max(rock.coordinates.iter().max().unwrap() / row_offset);
@@ -107,11 +108,11 @@ fn main() {
         }
     }
 
-    let display_rows = 20..=0;
-    for y in display_rows{
-        for x in 0..row_offset{
-            let coordinate = y*row_offset + x;
-            let character = match rock_formation.contains(&coordinate){
+    let display_rows = 0..=20;
+    for y in display_rows.rev() {
+        for x in 0..row_offset {
+            let coordinate = y * row_offset + x;
+            let character = match rock_formation.contains(&coordinate) {
                 true => '#',
                 false => '.',
             };
@@ -119,6 +120,8 @@ fn main() {
         }
         println!()
     }
+
+    println!("part 1: {}", top_row + 1)
 }
 
 #[derive(Clone, Copy)]
