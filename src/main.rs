@@ -7,7 +7,7 @@ use std::{
 };
 
 fn main() {
-    let file_path = "../input.txt";
+    let file_path = "../test.txt";
     let width = 7;
     let spawn_height = 4;
     let stop_after = 2022; //1000000000000
@@ -33,7 +33,7 @@ fn main() {
             let mut shape = Shape::<i32>::default();
             let rows = string.split("\n").map(|slice| {
                 if slice.len() > width {
-                    panic!("Invalid shape data too wide");
+                    panic!("Invalid shape data: too wide");
                 }
                 slice
                     .chars()
@@ -107,7 +107,7 @@ fn main() {
             let mut clone = rock.clone();
             clone.step(vertical_push);
             if clone.coordinates.iter().any(|coordinate| {
-                rock_formation.contains(coordinate) || *coordinate % row_offset <= floor_row
+                rock_formation.contains(coordinate) || *coordinate < 0
             }) {
                 //collision
                 top_row = top_row.max(rock.coordinates.iter().max().unwrap() / row_offset);
