@@ -7,7 +7,7 @@ use std::{
 };
 
 fn main() {
-    let file_path = "../test.txt";
+    let file_path = "../input.txt";
     let width = 7;
     let spawn_height = 4;
     let stop_after = 2022;
@@ -57,7 +57,8 @@ fn main() {
 
     let mut jets = jets.iter().cycle();
     let mut rock_formation = HashSet::new();
-    let mut top_row = 0;
+    let floor_row = -1;
+    let mut top_row = floor_row;
     let row_offset = width as i32;
     let vertical_push = -7;
 
@@ -77,7 +78,7 @@ fn main() {
                         .iter()
                         .all(|coordinate| coordinate % row_offset > 0) =>
                 {
-                    -1
+                    Some(-1)
                 }
                 Direction::Right
                     if rock
@@ -85,20 +86,29 @@ fn main() {
                         .iter()
                         .all(|coordinate| coordinate % row_offset < row_offset - 1) =>
                 {
-                    1
+                    Some(1)
                 }
 
-                _ => 0,
+                _ => None,
             };
-            rock.step(side_push);
+            if let Some(push) = side_push {
+                let mut clone = rock.clone();
+                clone.step(push);
+                match clone
+                    .coordinates
+                    .iter()
+                    .any(|coordinate| rock_formation.contains(coordinate))
+                {
+                    true => (),
+                    false => rock = clone,
+                }
+            }
 
             let mut clone = rock.clone();
             clone.step(vertical_push);
-            if clone
-                .coordinates
-                .iter()
-                .any(|coordinate| rock_formation.contains(coordinate) || *coordinate%row_offset <= 0)
-            {
+            if clone.coordinates.iter().any(|coordinate| {
+                rock_formation.contains(coordinate) || *coordinate % row_offset <= floor_row
+            }) {
                 //collision
                 top_row = top_row.max(rock.coordinates.iter().max().unwrap() / row_offset);
                 rock_formation.extend(rock.coordinates);
@@ -121,7 +131,7 @@ fn main() {
         println!()
     }
 
-    println!("part 1: {}", top_row + 1)
+    println!("part 1: {}", top_row - floor_row)
 }
 
 #[derive(Clone, Copy)]
