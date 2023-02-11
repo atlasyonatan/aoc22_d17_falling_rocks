@@ -10,7 +10,7 @@ fn main() {
     let file_path = "../input.txt";
     let width = 7;
     let spawn_height = 4;
-    let stop_after = 2022;
+    let stop_after = 2022; //1000000000000
     let left_edge_offset = 2;
 
     let path = Path::new(file_path);
